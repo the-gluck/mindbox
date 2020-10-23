@@ -37,13 +37,33 @@ spec:
             - containerPort: 8080
           resources:
             limits:
-              memory: 128Mi
-              cpu: 100m
+              memory: 128Mi  # По памяти всегда “ровно” в районе 128M memory
+              cpu: 300m  # на первые запросы приложению требуется значительно больше ресурсов CPU (поставил от балды, конкретное значение нужно выяснять эмпирически)
             requests:
               memory: 128Mi
-              cpu: 100m
+              cpu: 100m  # в дальнейшем потребление ровное в районе 0.1 CPU
+          startupProbe:
+            httpGet:
+              path: /
+              port: 8080
+            failureThreshold: 5
+            periodSeconds: 5  # приложение требует около 5-10 секунд для инициализации
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 1
+            failureThreshold: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 1
+            failureThreshold: 6
+            periodSeconds: 10
       affinity:
-        podAntiAffinity:
+        podAntiAffinity:  # хотим максимально отказоустойчивый deployment todo: zones
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
               podAffinityTerm:
@@ -53,11 +73,11 @@ spec:
                       operator: In
                       values:
                         - appname
-                topologyKey: kubernetes.io/hostname  # zones?
+                topologyKey: kubernetes.io/hostname
 ---
 
 apiVersion: autoscaling/v2beta1
-kind: HorizontalPodAutoscaler
+kind: HorizontalPodAutoscaler  # хотим максимально отказоустойчивый deployment, хотим минимального потребления ресурсов от этого deployment’а
 metadata:
   name: appname-hpa
 spec:
@@ -65,13 +85,13 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: appname-deployment
-  minReplicas: 1
-  maxReplicas: 10
+  minReplicas: 2  # лучше отказоустойчиво, чем минимально потребляюще, поэтому 1 тут не подходит
+  maxReplicas: 4  # по результатам нагрузочного теста известно, что 4 пода справляются с пиковой нагрузкой (я бы с запасом поставил лучше)
   metrics:
     - type: Resource
       resource:
         name: cpu
-        targetAverageUtilization: 80
+        targetAverageUtilization: 90
 ---
 
 apiVersion: networking.k8s.io/v1beta1

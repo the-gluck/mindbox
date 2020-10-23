@@ -13,3 +13,28 @@
 > - хотим минимального потребления ресурсов от этого deployment’а
 
 ----
+
+Манифест тестировался на GKE
+
+```
+clientVersion:
+  buildDate: "2020-09-16T13:41:02Z"
+  compiler: gc
+  gitCommit: f5743093fd1c663cb0cbc89748f730662345d44d
+  gitTreeState: clean
+  gitVersion: v1.19.2
+  goVersion: go1.15
+  major: "1"
+  minor: "19"
+  platform: linux/amd64
+serverVersion:
+  buildDate: "2020-09-09T00:57:35Z"
+  compiler: gc
+  gitCommit: eb94c181eea5290e9da1238db02cfef263542f5f
+  gitTreeState: clean
+  gitVersion: v1.16.13-gke.401
+  goVersion: go1.13.9b4
+  major: "1"
+  minor: 16+
+  platform: linux/amd64
+```
