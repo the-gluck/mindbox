@@ -63,7 +63,7 @@ spec:
             failureThreshold: 6
             periodSeconds: 10
       affinity:
-        podAntiAffinity:  # хотим максимально отказоустойчивый deployment todo: zones
+        podAntiAffinity:  # хотим максимально отказоустойчивый deployment
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
               podAffinityTerm:
@@ -73,7 +73,16 @@ spec:
                       operator: In
                       values:
                         - appname
-                topologyKey: kubernetes.io/hostname
+                topologyKey: topology.kubernetes.io/zone  # в первую очередь распределяем по разным зонам
+            - weight: 50
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - appname
+                topologyKey: kubernetes.io/hostname  # если в зоне несколько доступных нод, во вторую очередь распределяем уже по разным нодам внутри зоны
 ---
 
 apiVersion: autoscaling/v2beta1
